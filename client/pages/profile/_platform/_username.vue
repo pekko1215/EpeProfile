@@ -207,7 +207,7 @@ export default Vue.extend({
   },
   async asyncData({params}) {
     let data = await fetch(
-      `http://localhost:3000/api/profile?platForm=${params.platform}&userName=${params.username}`
+      `http://localhost:28236/api/profile?platForm=${params.platform}&userName=${params.username}`
     );
     let obj = await data.json();
     if (obj.error) return false;

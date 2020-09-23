@@ -61,5 +61,9 @@ export default {
   build: {
   },
   srcDir:'client/',
-  serverMiddleware:["~~/api/"]
+  serverMiddleware:["~~/api/"],
+  server:{
+    port:28236,
+    host:'localhost'
+  }
 }

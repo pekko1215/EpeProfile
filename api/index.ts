@@ -19,6 +19,7 @@ App.get('/profile', async (req, res, next) => {
         })))
     } catch (e) {
         console.log("Error: "+ url)
+        console.error(e);
         return res.json({error:true})
     }
 })

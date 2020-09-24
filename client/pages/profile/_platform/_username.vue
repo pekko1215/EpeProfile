@@ -1,5 +1,5 @@
 <template>
-  <div id="profile">
+  <div id="profile" v-if="!loading">
     <div id="platForm">
       <div v-if="profile.platformInfo.platformSlug === 'origin'">
         <v-avatar>
@@ -30,7 +30,11 @@
       <v-list-item-avatar width="64" height="64">
         <img :src="userInfo.rankScore.metadata.iconUrl" />
       </v-list-item-avatar>
-      <v-list-item-content class="rank-name">{{userInfo.rankScore.metadata.rankName}}<br> Level {{userInfo.level.displayValue}}</v-list-item-content>
+      <v-list-item-content class="rank-name">
+        {{userInfo.rankScore.metadata.rankName}}
+        <br />
+        Level {{userInfo.level.displayValue}}
+      </v-list-item-content>
     </v-list-item>
     <div id="trackers">
       <div class="tracker" v-for="(tracker,idx) in legend.stats.slice(0,3)" :key="idx">
@@ -48,7 +52,7 @@
   height: 500px;
   /* border: solid 2px white; */
   position: absolute;
-  background:#121212;
+  background: #121212;
 }
 
 #platForm {
@@ -62,7 +66,7 @@
 #legend {
   position: absolute;
   height: 100%;
-  width: 300px;
+  width: 450px;
   left: 0;
   top: 0;
   overflow: hidden;
@@ -70,8 +74,7 @@
 
 #legend img {
   position: absolute;
-  left: -76px;
-  width: 450px;
+  width: 100%;
   opacity: 0.6;
   /* top: -58px; */
 }
@@ -79,8 +82,8 @@
   text-align: right;
   width: 300px;
   position: absolute;
-  top:120px;
-  left:400px;
+  top: 120px;
+  left: 400px;
   font-size: 4em;
 }
 
@@ -101,7 +104,7 @@
   height: 70%;
   position: relative;
   margin-right: 5px;
-  z-index:2;
+  z-index: 2;
 }
 
 #trackers .tracker::before {
@@ -115,7 +118,7 @@
   right: 0;
   margin-left: -30px;
   font-size: 16pt;
-  background:#121212;
+  background: #121212;
 }
 
 #trackers .tracker:nth-child(1) {
@@ -129,8 +132,8 @@
 }
 
 .tracker * {
-  z-index:1;
-  position:relative;
+  z-index: 1;
+  position: relative;
 }
 
 .tracker-title {
@@ -147,42 +150,41 @@
 .tracker-value {
   font-weight: bold;
   position: relative;
-  padding-left:10%;
-  margin-top:5px;
-  font-size:1.2em;
+  padding-left: 10%;
+  margin-top: 5px;
+  font-size: 1.2em;
 }
-.tracker-value::after{
-    content: "";
-    width: 80%;
-    height: 3px;
-    border-radius: 1px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    margin: auto;
-    background-color: darkred;
-    bottom: 0;
-    z-index: 3;
+.tracker-value::after {
+  content: "";
+  width: 80%;
+  height: 3px;
+  border-radius: 1px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: auto;
+  background-color: darkred;
+  bottom: 0;
+  z-index: 3;
 }
 
 .tracker-rank {
-  font-size:1em;
-  color:gray;
+  font-size: 1em;
+  color: gray;
   text-align: right;
-  padding-right:10%;
-  position:absolute;
-  bottom:0;
-  width:100%;
+  padding-right: 10%;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
 #rank {
   position: absolute;
-    right: 50px;
-    bottom: 120px;
-    width: 335px;
-  font-size:1.5em;
+  right: 50px;
+  bottom: 120px;
+  width: 335px;
+  font-size: 1.5em;
 }
-
 </style>
      
 <script lang="ts">
@@ -197,43 +199,45 @@ export default Vue.extend({
   data() {
     return {
       profile: {},
+      loading:true
     };
   },
-  validate({params}){
-    return /^(psn|origin|xbl)$/.test(params.platform)
+  validate({ params }) {
+    return /^(psn|origin|xbl)$/.test(params.platform);
   },
-  mounted() {
-    console.log(this);
-  },
-  async asyncData({params}) {
+  async mounted() {
+    let params = this.$route.params;
     let data = await fetch(
-      `http://localhost:28236/api/profile?platForm=${params.platform}&userName=${params.username}`
+      `/api/profile?platForm=${params.platform}&userName=${params.username}`
     );
     let obj = await data.json();
     if (obj.error) return false;
     // スコアデータが一番多いレジェンドを表示する
 
-    let legend = obj.data.segments.slice(1).reduce((a:any,b:any)=>{
-      return Object.keys(a.stats).length >= Object.keys(b.stats).length ? a : b;
+    // let legend = obj.data.segments.slice(1).reduce((a: any, b: any) => {
+    //   return Object.keys(a.stats).length >= Object.keys(b.stats).length ? a : b;
+    // });
+
+    let legend = obj.data.segments[1]
+
+    let stats = Object.keys(legend.stats).map((key) => {
+      return legend.stats[key];
     });
 
-    let stats = Object.keys(legend.stats).map(key=>{
-      return legend.stats[key]
-    });
-
-    legend.stats = stats.sort((a:any,b:any)=>{
+    legend.stats = stats.sort((a: any, b: any) => {
       return a.rank - b.rank;
-    })
+    });
     let userInfo = {
-      level:obj.data.segments[0].stats.level,
-      kills:obj.data.segments[0].stats.kills,
-      rankScore:obj.data.segments[0].stats.rankScore
-    }
-    return {
+      level: obj.data.segments[0].stats.level,
+      kills: obj.data.segments[0].stats.kills,
+      rankScore: obj.data.segments[0].stats.rankScore,
+    };
+    Object.assign(this,{
       profile: obj.data,
       legend,
-      userInfo
-    };
+      userInfo,
+    });
+    this.loading = false;
   },
 });
 </script>
